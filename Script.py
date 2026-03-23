@@ -13,18 +13,9 @@ class script(object):
 ★ Username: @filesprovidebot
 ★ Country: India Coimbatore
 
-    STATUS_TXT = """👤 Total Users: <code>{}</code>
-😎 Premium Users: <code>{}</code>
-👥 Total Chats: <code>{}</code>
-🗳 Data database used: <code>{}</code>
+    STATUS_TXT = """ Total Users: <code>{}</code>
 
-🗂 1st database Files: <code>{}</code>
-🗳 1st files database used: <code>{}</code>
-
-🗂 2nd database Files: <code>{}</code>
-🗳 2nd files database used: <code>{}</code>
-
-🚀 Bot Uptime: <code>{}</code>"""
+ Bot Uptime: <code>{}</code>"""
 
     NEW_GROUP_TXT = """#NewGroup
 Title - {}
@@ -36,15 +27,15 @@ Total - <code>{}</code>"""
 ★ Name: {}
 ★ ID: <code>{}</code>"""
 
-    NOT_FILE_TXT = """👋 Hello {},
+    NOT_FILE_TXT = """ Hello {},
 
-I can't find the <b>{}</b> in my database! 🥲
+I can't find the <b>{}</b> in my database! 
 
 👉 Google Search and check your spelling is correct.
 👉 Please read the Instructions to get better results.
 👉 Or not been released yet."""
     
-    IMDB_TEMPLATE = """✅ I Found: <code>{query}</code>
+    IMDB_TEMPLATE = """ I Found: <code>{query}</code>
 
 🏷 Title: <a href={url}>{title}</a>
 🎭 Genres: {genres}
