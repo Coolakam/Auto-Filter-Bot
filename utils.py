@@ -336,7 +336,7 @@ def get_wish():
     time = datetime.now(pytz.timezone(TIME_ZONE))
     now = time.strftime("%H")
     if now < "12":
-        status = "ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ 🌞"
+        status = "ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ Arise🌞"
     elif now < "18":
         status = "ɢᴏᴏᴅ ᴀꜰᴛᴇʀɴᴏᴏɴ 🌗"
     else:
