@@ -13,20 +13,6 @@ class script(object):
 ★ Username: @filesprovidebot
 ★ Country: India Coimbatore
 
-    STATUS_TXT = """ Total Users: <code>{}</code>
-
- Bot Uptime: <code>{}</code>"""
-
-    NEW_GROUP_TXT = """#NewGroup
-Title - {}
-ID - <code>{}</code>
-Username - {}
-Total - <code>{}</code>"""
-
-    NEW_USER_TXT = """#NewUser
-★ Name: {}
-★ ID: <code>{}</code>"""
-
     NOT_FILE_TXT = """ Hello {},
 
 I can't find the <b>{}</b> in my database! 
