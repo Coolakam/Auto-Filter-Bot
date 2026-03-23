@@ -12,8 +12,9 @@ class script(object):
     MY_OWNER_TXT = """★ Name: GGAS Bots
 ★ Username: @filesprovidebot
 ★ Country: India Coimbatore
+"""
 
-    NOT_FILE_TXT = """ Hello {},
+NOT_FILE_TXT = """ Hello {},
 
 I can't find the <b>{}</b> in my database! 
 
