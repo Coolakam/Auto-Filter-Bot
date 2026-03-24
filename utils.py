@@ -1,13 +1,12 @@
 from pyrogram.errors import UserNotParticipant, FloodWait
-from info import LONG_IMDB_DESCRIPTION, ADMINS, IS_PREMIUM, TIME_ZONE, TMDB_API_KEY
+from info import ADMINS, IS_PREMIUM, TIME_ZONE
 import asyncio
 from pyrogram.types import InlineKeyboardButton
 from pyrogram import enums
-import re
 from datetime import datetime
 from database.users_chats_db import db
 from shortzy import Shortzy
-import requests, pytz
+import pytz
 
 
 class temp(object):
@@ -26,13 +25,17 @@ class temp(object):
     BOT = None
     PREMIUM = {}
 
+
 async def is_subscribed(bot, query):
     btn = []
+
     if await is_premium(query.from_user.id, bot):
         return btn
+
     stg = db.get_bot_sttgs()
     if not stg or not stg.get('FORCE_SUB_CHANNELS'):
         return btn
+
     for id in stg.get('FORCE_SUB_CHANNELS').split(' '):
         chat = await bot.get_chat(int(id))
         try:
@@ -41,6 +44,7 @@ async def is_subscribed(bot, query):
             btn.append(
                 [InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)]
             )
+
     if stg and stg.get('REQUEST_FORCE_SUB_CHANNELS') and not db.find_join_req(query.from_user.id):
         id = stg.get('REQUEST_FORCE_SUB_CHANNELS')
         chat = await bot.get_chat(int(id))
@@ -51,22 +55,8 @@ async def is_subscribed(bot, query):
             btn.append(
                 [InlineKeyboardButton(f'Request : {chat.title}', url=url.invite_link)]
             )
+
     return btn
-
-
-def upload_image(file_path):
-    with open(file_path, 'rb') as f:
-        files = {'files[]': f}
-        response = requests.post("https://uguu.se/upload", files=files)
-
-    if response.status_code == 200:
-        try:
-            data = response.json()
-            return data['files'][0]['url'].replace('\\/', '/')
-        except Exception as e:
-            return None
-    else:
-        return None
 
 
 def list_to_str(k):
@@ -78,137 +68,16 @@ def list_to_str(k):
         return ", ".join(str(i) for i in k)
 
 
-async def get_poster(query, bulk=False, id=False, file=None):
-    TMDB_BASE = "https://api.themoviedb.org/3"
-
-    year = None
-    title = query
-
-    if not id:
-        query = query.strip()
-
-        year_match = re.findall(r"[1-2]\d{3}$", query)
-        if year_match:
-            year = year_match[0]
-            title = query.replace(year, "").strip()
-
-        elif file:
-            file_year = re.findall(r"[1-2]\d{3}", file)
-            if file_year:
-                year = file_year[0]
-
-        url = f"{TMDB_BASE}/search/multi"
-        params = {
-            "api_key": TMDB_API_KEY,
-            "query": title
-        }
-
-        res = requests.get(url, params=params).json()
-
-        results = [
-            r for r in res.get("results", [])
-            if r.get("media_type") in ["movie", "tv"]
-        ]
-
-        if not results:
-            return None
-
-        if year:
-            filtered = []
-            for r in results:
-                release = r.get("release_date") or r.get("first_air_date")
-                if release and release.startswith(str(year)):
-                    filtered.append(r)
-
-            if filtered:
-                results = filtered
-
-        if bulk:
-            _bulk = []
-            for r in results:
-                _title = r.get("title") or r.get("name")
-                if _title:
-                    _bulk.append({
-                        "title": _title,
-                        "id": r["id"]
-                        })
-            return _bulk
-
-
-        data = results[0]
-        tmdb_id = data["id"]
-        media_type = data["media_type"]
-
-    else:
-        tmdb_id = query
-
-        movie_test = requests.get(
-            f"{TMDB_BASE}/movie/{tmdb_id}",
-            params={"api_key": TMDB_API_KEY}
-        )
-
-        if movie_test.status_code == 200:
-            media_type = "movie"
-            data = movie_test.json()
-        else:
-            media_type = "tv"
-            data = requests.get(
-                f"{TMDB_BASE}/tv/{tmdb_id}",
-                params={"api_key": TMDB_API_KEY}
-            ).json()
-
-    if not id:
-        data = requests.get(
-            f"{TMDB_BASE}/{media_type}/{tmdb_id}",
-            params={"api_key": TMDB_API_KEY}
-        ).json()
-
-    title = data.get("title") or data.get("name")
-
-    poster = None
-    if data.get("poster_path"):
-        poster = f"https://image.tmdb.org/t/p/original{data['poster_path']}"
-
-    release_date = data.get("release_date") or data.get("first_air_date")
-
-    genres = list_to_str([g["name"] for g in data.get("genres", [])])
-
-    runtime = None
-    if media_type == "movie":
-        runtime = data.get("runtime")
-    else:
-        runtime = list_to_str(data.get("episode_run_time"))
-
-    plot = data.get("overview")
-
-    rating = data.get("vote_average")
-    votes = data.get("vote_count")
-    languages = list_to_str([l["english_name"] for l in data.get("spoken_languages", [])])
-    countries = list_to_str([c["name"] for c in data.get("production_countries", [])])
-
-    return {
-        "title": title,
-        "tmdb_id": tmdb_id,
-        "kind": media_type,
-        "languages": languages,
-        "countries": countries,
-        "release_date": release_date,
-        "year": release_date[:4] if release_date else None,
-        "genres": genres,
-        "runtime": runtime,
-        "rating": rating,
-        "votes": votes,
-        "poster": poster,
-        "plot": plot,
-        "url": f"https://www.themoviedb.org/{media_type}/{tmdb_id}"
-    }
-
 async def is_check_admin(bot, chat_id, user_id):
     try:
         member = await bot.get_chat_member(chat_id, user_id)
-        return member.status in [enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER]
+        return member.status in [
+            enums.ChatMemberStatus.ADMINISTRATOR,
+            enums.ChatMemberStatus.OWNER
+        ]
     except:
         return False
+
 
 async def get_verify_status(user_id):
     verify = temp.VERIFICATIONS.get(user_id)
@@ -217,52 +86,63 @@ async def get_verify_status(user_id):
         temp.VERIFICATIONS[user_id] = verify
     return verify
 
+
 async def update_verify_status(user_id, verify_token="", is_verified=False, link="", expire_time=0):
     current = await get_verify_status(user_id)
     current['verify_token'] = verify_token
     current['is_verified'] = is_verified
     current['link'] = link
     current['expire_time'] = expire_time
+
     temp.VERIFICATIONS[user_id] = current
     await db.update_verify_status(user_id, current)
 
-    
+
 async def is_premium(user_id, bot):
     if not IS_PREMIUM:
         return True
+
     if user_id in ADMINS:
         return True
+
     mp = db.get_plan(user_id)
+
     if mp['premium']:
         if mp['expire'] < datetime.now():
-            await bot.send_message(user_id, f"Your premium {mp['plan']} plan is expired in {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}, use /plan to activate new plan again")
+            await bot.send_message(
+                user_id,
+                f"Your premium {mp['plan']} plan expired on {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}, use /plan to activate again"
+            )
             mp['expire'] = ''
             mp['plan'] = ''
             mp['premium'] = False
             db.update_plan(user_id, mp)
             return False
         return True
-    else:
-        return False
+
+    return False
 
 
 async def check_premium(bot):
     while True:
         pr = [i for i in db.get_premium_users() if i['status']['premium']]
+
         for p in pr:
             mp = p['status']
             if mp['expire'] < datetime.now():
                 try:
                     await bot.send_message(
                         p['id'],
-                        f"Your premium {mp['plan']} plan is expired in {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}, use /plan to activate new plan again"
+                        f"Your premium {mp['plan']} plan expired on {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}"
                     )
                 except Exception:
                     pass
+
                 mp['expire'] = ''
                 mp['plan'] = ''
                 mp['premium'] = False
                 db.update_plan(p['id'], mp)
+
         await asyncio.sleep(1200)
 
 
@@ -272,90 +152,99 @@ async def broadcast_messages(user_id, message, pin):
         if pin:
             await m.pin(both_sides=True)
         return "Success"
+
     except FloodWait as e:
         await asyncio.sleep(e.value)
         return await broadcast_messages(user_id, message, pin)
-    except Exception as e:
+
+    except Exception:
         await db.delete_user(int(user_id))
         return "Error"
+
 
 async def groups_broadcast_messages(chat_id, message, pin):
     try:
         k = await message.copy(chat_id=chat_id)
+
         if pin:
             try:
                 await k.pin()
             except:
                 pass
+
         return "Success"
+
     except FloodWait as e:
         await asyncio.sleep(e.value)
         return await groups_broadcast_messages(chat_id, message, pin)
-    except Exception as e:
+
+    except Exception:
         await db.delete_chat(chat_id)
         return "Error"
 
+
 async def get_settings(group_id):
     settings = temp.SETTINGS.get(group_id)
+
     if not settings:
         settings = await db.get_settings(group_id)
-        temp.SETTINGS.update({group_id: settings})
+        temp.SETTINGS[group_id] = settings
+
     return settings
-    
+
+
 async def save_group_settings(group_id, key, value):
     current = await get_settings(group_id)
-    current.update({key: value})
-    temp.SETTINGS.update({group_id: current})
+    current[key] = value
+
+    temp.SETTINGS[group_id] = current
     await db.update_settings(group_id, current)
+
 
 def get_size(size):
     units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
     size = float(size)
     i = 0
-    while size >= 1024.0 and i < len(units):
-        i += 1
+
+    while size >= 1024.0 and i < len(units) - 1:
         size /= 1024.0
+        i += 1
+
     return "%.2f %s" % (size, units[i])
 
 
 async def get_shortlink(url, api, link):
     shortzy = Shortzy(api_key=api, base_site=url)
-    link = await shortzy.convert(link)
-    return link
+    return await shortzy.convert(link)
+
 
 def get_readable_time(seconds):
     periods = [('d', 86400), ('h', 3600), ('m', 60), ('s', 1)]
     result = ''
-    for period_name, period_seconds in periods:
-        if seconds >= period_seconds:
-            period_value, seconds = divmod(seconds, period_seconds)
-            result += f'{int(period_value)}{period_name}'
+
+    for name, count in periods:
+        if seconds >= count:
+            value, seconds = divmod(seconds, count)
+            result += f'{int(value)}{name}'
+
     return result
 
+
 def get_wish():
-    time = datetime.now(pytz.timezone(TIME_ZONE))
-    now = time.strftime("%H")
+    now = datetime.now(pytz.timezone(TIME_ZONE)).strftime("%H")
+
     if now < "12":
-        status = "ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ Arise🌞"
+        return "ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ 🌞"
     elif now < "18":
-        status = "ɢᴏᴏᴅ ᴀꜰᴛᴇʀɴᴏᴏɴ 🌗"
+        return "ɢᴏᴏᴅ ᴀꜰᴛᴇʀɴᴏᴏɴ 🌗"
     else:
-        status = "ɢᴏᴏᴅ ᴇᴠᴇɴɪɴɢ 🌘"
-    return status
-    
+        return "ɢᴏᴏᴅ ᴇᴠᴇɴɪɴɢ 🌘"
+
+
 async def get_seconds(time_string):
-    def extract_value_and_unit(ts):
-        value = ""
-        unit = ""
-        index = 0
-        while index < len(ts) and ts[index].isdigit():
-            value += ts[index]
-            index += 1
-        unit = ts[index:]
-        if value:
-            value = int(value)
-        return value, unit
-    value, unit = extract_value_and_unit(time_string)
+    value = int(''.join(filter(str.isdigit, time_string)))
+    unit = ''.join(filter(str.isalpha, time_string))
+
     if unit == 's':
         return value
     elif unit == 'min':
@@ -368,5 +257,5 @@ async def get_seconds(time_string):
         return value * 86400 * 30
     elif unit == 'year':
         return value * 86400 * 365
-    else:
-        return 0
+
+    return 0
