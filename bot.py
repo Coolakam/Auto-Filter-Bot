@@ -21,7 +21,7 @@ from pyrogram import types, Client, StopPropagation
 from pyrogram.handlers import MessageHandler
 from typing import Union, Optional, AsyncGenerator
 
-from info import INDEX_CHANNELS, SUPPORT_GROUP, LOG_CHANNEL, API_ID, DATA_DATABASE_URL, API_HASH, BOT_TOKEN, PORT, BIN_CHANNEL, ADMINS
+from info import INDEX_CHANNELS, SUPPORT_GROUP, LOG_CHANNEL, API_ID, DATA_DATABASE_URL, API_HASH, BOT_TOKEN, PORT, ADMINS
 from utils import temp, get_readable_time, check_premium
 from database.users_chats_db import db
 
